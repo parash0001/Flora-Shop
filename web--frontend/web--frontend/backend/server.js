@@ -13,9 +13,7 @@ process.on("uncaughtException", (err) => {
 });
 console.log
 // create config
-dotenv.config({
-  path: "backend/config/config.env",
-});
+dotenv.config();
 
 connectDatabase();
 cloudinary.config({

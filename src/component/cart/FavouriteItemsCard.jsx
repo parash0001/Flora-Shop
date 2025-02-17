@@ -1,16 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import "./FavouriteItemsCard.css";
-import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom"
+import "./FavouriteItemsCard.css"
+import { useDispatch } from "react-redux"
+import { addItemsToCart } from "../../actions/CartAction"
+import { deleteFavouriteItemsToCart } from "../../actions/FavouriteAction"
+import { toast, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 const FavouriteItemsCard = ({ item, deleteFavouriteItems }) => {
-  const dispatch = useDispatch();
-  const { product } = useSelector((state) => state.productDetails);
+  const dispatch = useDispatch()
+
+  const addToCartHandler = () => {
+    dispatch(addItemsToCart(item.product, 1))
+    dispatch(deleteFavouriteItemsToCart(item.product))
+    toast.success("Item Added To Cart and Removed from Favourites")
+    deleteFavouriteItems(item.product) // Call the prop function to update parent component state
+  }
 
   return (
     <div className="FavouriteItemsCard">
       <div>
-        <img src={item.image} alt="ssa" />
+        <img src={item.image || "/placeholder.svg"} alt={item.name} />
         <p onClick={() => deleteFavouriteItems(item.product)}>Remove</p>
         <Link
           to={`/product/${item.product}`}
@@ -29,24 +38,29 @@ const FavouriteItemsCard = ({ item, deleteFavouriteItems }) => {
 
       <div>
         <p style={{ paddingBottom: ".5vmax" }}>
-          <b className={product.Stock < 1 ? "redColor" : "greenColor"}>
-            {product.Stock < 1 ? "OutOfStock" : "InStock"}
-          </b>
+          <b className={item.stock < 1 ? "redColor" : "greenColor"}>{item.stock < 1 ? "Out of Stock" : "In Stock"}</b>
         </p>
       </div>
 
       <div>
-        <Link to={`/product/${item.product}`}>
-          <button
-            className="favouritesButton"
-            onClick={() => deleteFavouriteItems(item.product)}
-          >
-            Add To Cart
-          </button>
-        </Link>
+        <button className="favouritesButton" onClick={addToCartHandler} disabled={item.stock < 1}>
+          Add To Cart
+        </button>
       </div>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
-  );
-};
+  )
+}
 
-export default FavouriteItemsCard;
+export default FavouriteItemsCard
+

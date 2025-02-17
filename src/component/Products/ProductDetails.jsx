@@ -1,102 +1,107 @@
-import React, { useEffect, useState } from "react";
-import Carousel from "react-material-ui-carousel";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  clearErrors,
-  getProductDetails,
-  newReview,
-} from "../../actions/productActions";
-import MetaData from "../../more/MetaData";
-import Header from "../Home/Header";
-import "./Productdetails.css";
-import { Rating } from "@material-ui/lab";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { addItemsToCart } from "../../actions/CartAction";
-import { addFavouriteItemsToCart } from "../../actions/FavouriteAction";
-import ReviewCard from "./ReviewCard.jsx";
-import { NEW_REVIEW_RESET } from "../../constants/ProductConstants";
-import BottomTab from "../../more/BottomTab";
-import Loading from "../../more/Loader";
-import Footer from "../../more/Footer";
+"use client"
+
+import { useEffect, useState } from "react"
+import Carousel from "react-material-ui-carousel"
+import { useDispatch, useSelector } from "react-redux"
+import { clearErrors, getProductDetails, newReview } from "../../actions/productActions"
+import MetaData from "../../more/MetaData"
+import Header from "../Home/Header"
+import "./Productdetails.css"
+import { Rating } from "@material-ui/lab"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import { addItemsToCart } from "../../actions/CartAction"
+import { addFavouriteItemsToCart } from "../../actions/FavouriteAction"
+import ReviewCard from "./ReviewCard.jsx"
+import { NEW_REVIEW_RESET } from "../../constants/ProductConstants"
+import BottomTab from "../../more/BottomTab"
+import Loading from "../../more/Loader"
+import Footer from "../../more/Footer"
 
 const ProductDetails = ({ match, history }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
 
-  const { product, loading, error } = useSelector(
-    (state) => state.productDetails
-  );
+  const { product, loading, error } = useSelector((state) => state.productDetails)
 
-  const { isAuthenticated } = useSelector((state) => state.user);
+  const { isAuthenticated } = useSelector((state) => state.user)
 
   const reviewSubmitHandler = (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    const myForm = new FormData();
+    const myForm = new FormData()
 
-    myForm.set("rating", rating);
-    myForm.set("comment", comment);
-    myForm.set("productId", match.params.id);
+    myForm.set("rating", rating)
+    myForm.set("comment", comment)
+    myForm.set("productId", match.params.id)
+    isAuthenticated !== true ? history.push(`/login?redirect=/`) : <></>
 
-    {
-      isAuthenticated !== true ? history.push(`/login?redirect=/`) : <></>;
-    }
-
-    dispatch(newReview(myForm));
-
-    {
-      comment.length === 0
-        ? toast.error("Please fill the comment box")
-        : toast.success("Review done successfully reload for watch it");
-    }
-    dispatch({ type: NEW_REVIEW_RESET });
-  };
+    dispatch(newReview(myForm))
+    comment.length === 0
+      ? toast.error("Please fill the comment box")
+      : toast.success("Review done successfully reload for watch it")
+    dispatch({ type: NEW_REVIEW_RESET })
+  }
 
   useEffect(() => {
     if (error) {
-      alert.error(error);
-      dispatch(clearErrors());
+      toast.error(error)
+      dispatch(clearErrors())
     }
-    dispatch(getProductDetails(match.params.id));
-  }, [dispatch, match.params.id, error, alert]);
+    dispatch(getProductDetails(match.params.id))
+  }, [dispatch, match.params.id, error])
+
+  // Add this useEffect to log the product data
+  useEffect(() => {
+    if (product) {
+      console.log("Product data:", product)
+    }
+  }, [product])
 
   const options = {
     value: product.ratings,
     readOnly: true,
     precision: 0.5,
-  };
+  }
 
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState("")
 
   // Increase quantity
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(1)
 
   const increaseQuantity = () => {
-    if (product.stock <= quantity) return toast.error("Product stock limited");
-    const qty = quantity + 1;
-    setQuantity(qty);
-  };
+    if (product.stock <= quantity) return toast.error("Product stock limited")
+    const qty = quantity + 1
+    setQuantity(qty)
+  }
 
   const decreaseQuantity = () => {
-    if (1 >= quantity) return;
-    const qty = quantity - 1;
-    setQuantity(qty);
-  };
+    if (1 >= quantity) return
+    const qty = quantity - 1
+    setQuantity(qty)
+  }
 
   const addToCartHandler = () => {
-    if (product.stock > 0) {
-      dispatch(addItemsToCart(match.params.id, quantity));
-      toast.success("Product Added to cart");
+    console.log("Current product stock:", product.Stock) // Log the current stock
+    if (product.Stock && product.Stock > 0) {
+      if (quantity <= product.Stock) {
+        console.log("Adding to cart:", match.params.id, quantity)
+        dispatch(addItemsToCart(match.params.id, quantity))
+        console.log("Dispatched addItemsToCart action")
+        toast.success("Product Added to cart")
+      } else {
+        toast.error(`Only ${product.Stock} items available in stock`)
+      }
     } else {
-      toast.error("Product stock limited");
+      console.log("Product out of stock")
+      toast.error("Product out of stock")
     }
-  };
+  }
 
   const addToFavouriteHandler = () => {
-    dispatch(addFavouriteItemsToCart(match.params.id, quantity));
-    toast.success("Product Added to Favourites");
-  };
+    dispatch(addFavouriteItemsToCart(match.params.id, quantity))
+    toast.success("Product Added to Favourites")
+  }
 
   return (
     <>
@@ -111,12 +116,7 @@ const ProductDetails = ({ match, history }) => {
               <Carousel>
                 {product.images &&
                   product.images.map((item, i) => (
-                    <img
-                      className="CarouselImage"
-                      key={i}
-                      src={item.url}
-                      alt={`${i} Slide`}
-                    />
+                    <img className="CarouselImage" key={i} src={item.url || "/placeholder.svg"} alt={`${i} Slide`} />
                   ))}
               </Carousel>
             </div>
@@ -135,9 +135,7 @@ const ProductDetails = ({ match, history }) => {
                   }}
                 >
                   <h1>{`$${product.price}`}</h1>
-                  <h1 className="discountPrice">
-                    {product.offerPrice > 0 ? `$${product.offerPrice}` : ""}
-                  </h1>
+                  <h1 className="discountPrice">{product.offerPrice > 0 ? `$${product.offerPrice}` : ""}</h1>
                 </div>
                 <div className="detailsBlock-3-1">
                   <span className="quantity">Quantity</span>
@@ -148,8 +146,8 @@ const ProductDetails = ({ match, history }) => {
                   </div>{" "}
                 </div>
                 <p className="stock__meta" style={{ paddingBottom: ".5vmax" }}>
-                  <b className={product.Stock < 1 ? "redColor" : "greenColor"}>
-                    {product.Stock < 1 ? "OutOfStock" : "InStock"}
+                  <b className={product.Stock > 0 ? "greenColor" : "redColor"}>
+                    {product.Stock > 0 ? `In Stock (${product.Stock} available)` : "Out of Stock"}
                   </b>
                 </p>
                 <div
@@ -188,10 +186,7 @@ const ProductDetails = ({ match, history }) => {
                     >
                       <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"></path>
                     </svg>
-                    <span
-                      className="cartBtn"
-                      style={{ opacity: 0.7, padding: "0px 5px" }}
-                    >
+                    <span className="cartBtn" style={{ opacity: 0.7, padding: "0px 5px" }}>
                       Add to wishlist
                     </span>
                   </div>
@@ -201,9 +196,10 @@ const ProductDetails = ({ match, history }) => {
                     style={{
                       padding: "10px 5px",
                       alignItems: "center",
-                      backgroundColor: "#E4EAEC",
+                      backgroundColor: product.Stock > 0 ? "#E4EAEC" : "#f0f0f0",
+                      cursor: product.Stock > 0 ? "pointer" : "not-allowed",
                     }}
-                    onClick={addToCartHandler}
+                    onClick={product.Stock > 0 ? addToCartHandler : undefined}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -218,14 +214,15 @@ const ProductDetails = ({ match, history }) => {
                     <button
                       className="cartBtn"
                       style={{
-                        opacity: 0.7,
+                        opacity: product.Stock > 0 ? 0.7 : 0.5,
                         padding: "0px 5px",
                         border: "none",
-                        cursor: "pointer",
+                        cursor: product.Stock > 0 ? "pointer" : "not-allowed",
                         background: "none",
                       }}
+                      disabled={product.Stock <= 0}
                     >
-                      Add to Cart
+                      {product.Stock > 0 ? "Add to Cart" : "Out of Stock"}
                     </button>
                   </div>
                 </div>
@@ -255,9 +252,7 @@ const ProductDetails = ({ match, history }) => {
               {product.reviews && product.reviews[0] ? (
                 <div className="review__option">
                   {product.reviews &&
-                    product.reviews.map((review) => (
-                      <ReviewCard review={review} />
-                    ))}
+                    product.reviews.map((review, index) => <ReviewCard key={index} review={review} />)}
                 </div>
               ) : (
                 <p
@@ -305,11 +300,7 @@ const ProductDetails = ({ match, history }) => {
                     >
                       Your Rating*
                     </span>
-                    <Rating
-                      onChange={(e) => setRating(e.target.value)}
-                      value={rating}
-                      size="large"
-                    />
+                    <Rating onChange={(e) => setRating(e.target.value)} value={rating} size="large" />
                     <div
                       style={{
                         display: "flex",
@@ -373,7 +364,8 @@ const ProductDetails = ({ match, history }) => {
         </>
       )}
     </>
-  );
-};
+  )
+}
 
-export default ProductDetails;
+export default ProductDetails
+
